@@ -231,7 +231,7 @@
 
     <div class="meta-row">
       <span>Найдено: <b id="countNum">0</b></span>
-      <span id="sourceLabel">источник: демо-данные</span>
+      <span id="sourceLabel">источник: подключение...</span>
     </div>
 
     <div class="results" id="results"></div>
@@ -241,12 +241,8 @@
   </div>
 
 <script>
-/* ====================================================================
-   НАСТРОЙКА: вставь сюда URL своего Apps Script Web App после деплоя.
-   Пока пусто — работает на демо-данных ниже, чтобы можно было
-   сразу смотреть, как всё выглядит.
-   ==================================================================== */
-const APPS_SCRIPT_URL = ""; // например: "https://script.google.com/macros/s/AKfycby9lWBndJwmEktfg-46gwtkCxVuwILrZk4kOjBXLRXrLAGPVXYI_3Br3ut1eeKT53cY/exec"
+// URL твоего задеплоенного Apps Script Web App
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxkHAMBV1r5C1iJyLdYgmBpocmquDlBhvDH4QpY1NBwdvV9EbHRIZygWsNtVNNQ92JB/exec";
 
 let ALL_DATA = [];
 
@@ -254,24 +250,19 @@ async function loadData(){
   const statusLine = document.getElementById('statusLine');
   const sourceLabel = document.getElementById('sourceLabel');
 
-  if(!APPS_SCRIPT_URL){
-    ALL_DATA = DEMO_DATA;
-    statusLine.textContent = "Демо-режим — подключи APPS_SCRIPT_URL для реальных данных";
-    render("");
-    return;
-  }
-
   try{
     statusLine.textContent = "Загрузка из Google Sheets...";
     const res = await fetch(APPS_SCRIPT_URL);
-    if(!res.ok) throw new Error("Bad response");
+    if(!res.ok) throw new Error("Bad response: " + res.status);
     ALL_DATA = await res.json();
+    if(!Array.isArray(ALL_DATA)) throw new Error("Ответ не массив — проверь doGet()");
     sourceLabel.textContent = "источник: Google Sheets";
-    statusLine.textContent = "Данные обновлены";
+    statusLine.textContent = "Данные обновлены (" + ALL_DATA.length + " филиалов)";
   }catch(err){
-    console.warn("Не удалось получить данные из Apps Script, показываю демо:", err);
-    ALL_DATA = DEMO_DATA;
-    statusLine.textContent = "Не удалось загрузить таблицу — показаны демо-данные";
+    console.error("Не удалось получить данные из Apps Script:", err);
+    ALL_DATA = [];
+    sourceLabel.textContent = "источник: ошибка подключения";
+    statusLine.textContent = "Не удалось загрузить таблицу — проверь ссылку и доступ в Apps Script";
   }
   render("");
 }
